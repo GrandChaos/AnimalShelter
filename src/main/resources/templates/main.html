@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="rus" xmlns:th="https://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity3">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+        <title>Приют</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+        <link type="text/css" href="../static/css/style.css" th:href="@{/css/style.css}" rel="stylesheet" />
+    </head>
+    <body th:with="groupToDel=0">
+    <!-- ШАПКА -->
+    <nav class="navbar navbar-expand-lg navbar-light">
+        <div class="container">
+            <a class="navbar-brand" href="/AnimalShelter">
+                <img src="https://cdn-icons-png.flaticon.com/512/3047/3047928.png" width="75">
+                Приют
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+    <!--
+            <form class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+                <button class="btn btn-primary d-block w-100" type="submit">Search</button>
+            </form>
+    -->
+        </div>
+    </nav>
+    <div class="container">
+        <div class="row">
+
+
+            <!-- БОКОВОЕ МЕНЮ С ГРУППАМИ -->
+            <div class="col-3">
+                <nav class="navbar navbar-light flex-column align-items-stretch p-3">
+                    <div class="btn-group">
+                        <a type="button" class="btn btn-primary" href="/AnimalShelter/newAnimal">
+                            Добавить
+                        </a>
+                    </div>
+                    <p></p>
+                    <div class="accordion accordion-flush" id="accordionFlushExample">
+                        <th:block th:each="group:${groups}">
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" th:attr="id='flush-heading'+${group.id}">
+                                    <a class="accordion-button collapsed btn" data-bs-toggle="collapse" th:attr="data-bs-target='#flush-collapse'+${group.id}" aria-expanded="false" th:text="${group.name}">
+                                    </a>
+                                </h2>
+                                <div th:attr="id='flush-collapse'+${group.id}" class="accordion-collapse collapse" data-bs-parent="#accordionFlushExample">
+                                    <div class="accordion-body">
+                                        <a class="dropdown-item" th:href="@{'/AnimalShelter/deleteGroup?id='+${group.id}}" data-bs-toggle="modal" data-bs-target="#exampleModal1" onclick="return changeHrefDelGroup(this);"><b>Удалить группу</b></a>
+                                    </div>
+                                    <th:block th:each="animal: ${group.animals}">
+                                        <div class="accordion-body">
+                                            <a class="dropdown-item" th:href="@{'/AnimalShelter/animal?id='+${animal.id}}" th:text="${animal.name}"></a>
+                                        </div>
+                                    </th:block>
+                                </div>
+                            </div>
+                        </th:block>
+                    </div>
+                </nav>
+            </div>
+            <div class="col-8">
+                <p></p>
+
+
+                <!-- ПУСТОЕ ПОЛЕ -->
+                <div th:if="${displayed.nothing}">
+                    <div class="mb-2">
+                        <h3 align="center">Добро пожаловать!</h3>
+                    </div>
+                    <p></p>
+                    <p></p>
+                    <p></p>
+                    <form method="post" enctype="multipart/form-data">
+                        <div class="mb-2">
+                            <label class="col-form-label">Импорт из файла Excel: </label>
+                            <input type="file" class="form-control" name="excel" accept=".xls,.xlsx">
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <div class="d-flex">
+                                <button type="submit" class="btn btn-primary">Добавить</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ПОКАЗ ФОРМЫ ПРИНЯТИЯ ЖИВОТНОГО -->
+                <div th:if="${displayed.addAnimal}">
+                    <form method="post" th:object="${newAnimal}">
+                        <div class="mb-3">
+                            <h5 align="center">Добавить животное</h5>
+                            <label class="col-form-label">Тип животного:</label>
+                            <input class="form-control" list="datalistOptions" placeholder="Выберите из существующих или напишите свой" th:field="${newAnimal.group}">
+                            <datalist id="datalistOptions">
+                                <th:block th:each="group:${groups}">
+                                    <option th:value="${group.name}">
+                                </th:block>
+                            </datalist>
+                        </div>
+                        <div class="mb-3">
+                            <label class="col-form-label">Кличка:</label>
+                            <input type="text" class="form-control" placeholder="Кличка" th:field="${newAnimal.name}">
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <div class="d-flex">
+                                <button type="submit" class="btn btn-primary">Добавить</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+
+                <!-- ПОКАЗ ФОРМЫ ИНФОРМАЦИИ -->
+                <div th:if="${displayed.animal}">
+                    <form method="post" th:object="${animal}" enctype="multipart/form-data">
+                        <div class="mb-2">
+                            <label class="col-form-label">Тип животного:</label>
+                            <input type="text" class="form-control" placeholder="Тип живтоного" disabled th:field="${animal.group.name}">
+                        </div>
+                        <div class="mb-2">
+                            <label class="col-form-label">Кличка:</label>
+                            <input type="text" class="form-control" placeholder="Кличка" th:field="${animal.name}">
+                        </div>
+                        <div class="mb-2">
+                            <label class="col-form-label">Фото: </label>
+                            <!--<input type="text" class="form-control" placeholder="URI изображения" th:field="${animal.imagePath}">-->
+                            <input type="file" name="image" accept="image/*,image/jpeg">
+                        </div>
+                        <p></p>
+                        <div class="mb-3">
+                            <label class="col-form-label">Описание:</label>
+                            <textarea class="form-control" placeholder="Описание" rows="10" th:field="${animal.description}"></textarea>
+                        </div>
+                        <div>
+                            <p class="text-start">Принят:</p>
+                            <p class="text-start" th:text="${animal.date}"></p>
+                        </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <div class="d-flex btn-group">
+                                <a type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#exampleModal">Удалить запись</a>
+                                <button type="submit" class="btn btn-primary">Сохранить изменения</button>
+                                <a type="button" class="btn btn-info" th:href="@{'/AnimalShelter/exportToPDF?id='+${animal.id}}">Экспортировать в PDF</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ДЛЯ УДАЛЕНИЯ ЗАПИСИ -->
+    <div th:if="${displayed.animal}" class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Удалить</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите удалить запись?</p>
+                </div>
+                <div class="modal-footer">
+                    <a type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</a>
+                    <a type="button" class="btn btn-primary" th:href="@{'/AnimalShelter/delete?id='+${animal.id}}">Удалить запись</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛКА ДЛЯ УДАЛЕНИЯ ГРУППЫ -->
+    <div class="modal fade" id="exampleModal1" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel1">Удалить</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Вы уверены, что хотите удалить группу? Все животные в ней также будут удалены.</p>
+                </div>
+                <div class="modal-footer">
+                    <a type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</a>
+                    <a type="button" class="btn btn-primary" id="delGroup" href="/AnimalShelter/deleteGroup?id=0">Удалить группу</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.0.1/jquery.min.js"></script>
+    <script type="text/javascript">
+       var delGroup = document.getElementById('delGroup');
+
+       function changeHrefDelGroup(element)
+       {
+           delGroup.href = element.href;
+           return false;
+       }
+    </script>
+
+    </body>
+</html>
